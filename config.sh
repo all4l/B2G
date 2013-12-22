@@ -6,8 +6,16 @@ sync_flags=""
 repo_sync() {
 	rm -rf .repo/manifest* &&
 	$REPO init -u $GITREPO -b $BRANCH -m $1.xml &&
-	$REPO sync $sync_flags
-	ret=$?
+	while true; do
+		$REPO sync $sync_flags
+		ret=$?
+		if [ $ret -eq 0 ]; then
+			echo success..
+			break;
+		else
+			echo retry..
+		fi
+	done
 	if [ "$GITREPO" = "$GIT_TEMP_REPO" ]; then
 		rm -rf $GIT_TEMP_REPO
 	fi
