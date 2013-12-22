@@ -135,6 +135,29 @@ flash_fastboot()
 	echo -ne \\a
 }
 
+flash_pxa1088dkb()
+{
+	# force use built tools
+	ADB=out/host/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/bin/adb
+	FASTBOOT=out/host/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/bin/fastboot
+
+	run_adb reboot downloader && sleep 8
+	if [ $? -ne 0 ]; then
+		echo Couldn\'t reboot into download mode. Hope you\'re already in download mode
+	fi
+
+	if ! run_fastboot devices; then
+		echo Couldn\'t setup fastboot
+		exit -1
+	fi
+	run_fastboot getvar verify-product-id:80000000
+	device/marvell/$DEVICE/signboot out/target/product/$DEVICE/ &&
+	run_fastboot flash boot out/target/product/$DEVICE/boot.part &&
+	run_fastboot flash -S 64M system out/target/product/$DEVICE/system.img &&
+	run_fastboot flash -S 64M userdata out/target/product/$DEVICE/userdata.img &&
+	run_fastboot reboot
+}
+
 flash_heimdall()
 {
 	local project=$1
